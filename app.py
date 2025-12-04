@@ -7,6 +7,7 @@ from langchain_core.prompts import PromptTemplate
 from langchain_core.runnables import RunnablePassthrough
 from transformers import pipeline
 
+
 #core logic
 def build_qa(pdf_path):
     loader = PyPDFLoader(pdf_path)
