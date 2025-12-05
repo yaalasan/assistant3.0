@@ -2,6 +2,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse
 from app import build_qa
 from typing import Any
 import tempfile
@@ -9,8 +10,13 @@ import traceback
 import os
 
 
+
 app = FastAPI()
-app.mount("/", StaticFiles(directory="static", html=True), name="static")
+app.mount("/static", StaticFiles(directory="static", html=True), name="static")
+@app.get("/")
+def serve_index():
+    return FileResponse("static/index.html")
+
 qa_holder: dict[str, Any] = {"qa": None}
 
 # allow front-end requests (use FastAPI's add_middleware API)
