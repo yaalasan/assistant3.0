@@ -1,4 +1,4 @@
-const API_URL = "https://hualiassist.lol"; // your domain
+const API_URL = "https://hualiassist.lol"; // hualiassist.lol
 
 async function uploadPDF() {
   const file = document.getElementById("fileInput").files[0];
