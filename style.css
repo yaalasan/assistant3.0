@@ -1,0 +1,15 @@
+body {
+  font-family: Arial;
+  max-width: 600px;
+  margin: auto;
+  padding: 20px;
+}
+button {
+  padding: 8px 12px;
+  margin-top: 10px;
+}
+#answer {
+  background: #f0f0f0;
+  padding: 12px;
+  margin-top: 20px;
+}
