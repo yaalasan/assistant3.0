@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Huali AI PDF Assistant</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>AI PDF Assistant</h1>
+
+  <div>
+    <input type="file" id="fileInput">
+    <button onclick="uploadPDF()">Upload PDF</button>
+  </div>
+
+  <p id="status"></p>
+
+  <div>
+    <input type="text" id="questionInput" placeholder="Ask a question...">
+    <button onclick="askQuestion()">Ask</button>
+  </div>
+
+  <div id="answer"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>
