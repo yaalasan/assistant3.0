@@ -6,7 +6,6 @@ async function uploadPDF() {
 
   const formData = new FormData();
   formData.append("file", file);
-
   const res = await fetch(`${API_URL}/upload_pdf`, {
     method: "POST",
     body: formData

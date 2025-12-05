@@ -12,9 +12,9 @@ import os
 
 
 app = FastAPI()
-app.mount("/static", StaticFiles(directory="static", html=True), name="static")
+app.mount("/static", StaticFiles(directory="static"), name="static")
 @app.get("/")
-def serve_index():
+def root():
     return FileResponse("static/index.html")
 
 qa_holder: dict[str, Any] = {"qa": None}
