@@ -12,10 +12,7 @@ import os
 
 
 app = FastAPI()
-app.mount("/static", StaticFiles(directory="static"), name="static")
-@app.get("/")
-def root():
-    return FileResponse("static/index.html")
+
 
 qa_holder: dict[str, Any] = {"qa": None}
 
@@ -27,6 +24,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.mount("/static", StaticFiles(directory="static", html=True), name="static")
+@app.get("/")
+def root():
+    return FileResponse("static/index.html")
+
 @app.post("/upload_pdf")
 async def upload_pdf(file: UploadFile = File(...)):
     try:
