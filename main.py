@@ -8,6 +8,8 @@ from typing import Any
 import tempfile
 import traceback
 import os
+from huggingface_hub import InferenceApi
+import json
 
 
 
@@ -85,3 +87,35 @@ async def ask(request: str = Form(...)):
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+
+@app.get("/hf_test")
+def hf_test():
+    """Quick test endpoint to verify Hugging Face Inference API token and model.
+    Returns generated text or an error message. Do NOT send secrets here.
+    """
+    hf_token = os.environ.get("HUGGINGFACEHUB_API_TOKEN")
+    hf_model = os.environ.get("HF_MODEL", "google/flan-t5-small")
+    if not hf_token:
+        return JSONResponse(status_code=400, content={"error": "HUGGINGFACEHUB_API_TOKEN not set in environment"})
+
+    try:
+        client = InferenceApi(repo_id=hf_model, token=hf_token)
+        prompt = "Translate to English: Bonjour le monde"
+        # call model
+        res = client(prompt, parameters={"max_new_tokens": 32})
+        # normalize response
+        if isinstance(res, list) and res:
+            first = res[0]
+            if isinstance(first, dict):
+                text = first.get("generated_text") or first.get("text") or json.dumps(first)
+            else:
+                text = str(first)
+        elif isinstance(res, dict):
+            text = res.get("generated_text") or res.get("text") or json.dumps(res)
+        else:
+            text = str(res)
+
+        return JSONResponse({"model": hf_model, "result": text})
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
