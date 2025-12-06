@@ -1,12 +1,23 @@
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain_huggingface import HuggingFacePipeline
 from langchain_core.prompts import PromptTemplate
 from langchain_core.runnables import RunnablePassthrough
 from transformers import pipeline
+
+
+# Load model ONCE at module startup to avoid timeouts on Render
+print("Loading LLM model (this may take a minute on first load)...")
+_hf_pipe = pipeline(
+    "text2text-generation",
+    model="google/flan-t5-base",
+    temperature=0.0,
+    device=-1  # Use CPU; set to 0 for GPU if available
+)
+_llm = HuggingFacePipeline(pipeline=_hf_pipe)
+print("LLM model loaded successfully")
 
 
 #core logic
@@ -21,13 +32,8 @@ def build_qa(pdf_path):
     #create FAISS db
     db = FAISS.from_documents(chunks, embed)
 
-    #Load LLM
-    hf_pipe = pipeline(
-        "text2text-generation",
-        model="google/flan-t5-base",
-        temperature=0.0
-    )
-    llm = HuggingFacePipeline(pipeline=hf_pipe)
+    # Use cached LLM instead of loading it every time
+    llm = _llm
 
     # Create a retrieval chain
     retriever = db.as_retriever(search_kwargs={"k": 4})
