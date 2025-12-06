@@ -76,7 +76,7 @@ async def ask(request: str = Form(...)):
         print("🔹 Asking question:", request)
         result = qa_holder["qa"].invoke(request)
         print("✅ Invoke result:", result)
-        return JSONResponse({"reply": result["result"]})
+        return JSONResponse({"reply": result if isinstance(result, str) else result.get("result", str(result))})
     except Exception as e:
         print("❌ ERROR during ask:", e)
         traceback.print_exc()
