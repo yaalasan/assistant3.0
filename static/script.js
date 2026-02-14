@@ -1,4 +1,4 @@
-const API_URL = "https://hualiassist.lol"; // hualiassist.lol
+const API_URL = window.location.origin;
 
 async function uploadPDF() {
   const file = document.getElementById("fileInput").files[0];
