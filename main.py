@@ -1,121 +1,34 @@
-from fastapi.staticfiles import StaticFiles
-from fastapi import FastAPI, UploadFile, File, Form
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-from fastapi.responses import FileResponse
-from app import build_qa
-from typing import Any
-import tempfile
-import traceback
+# Updated main.py
+
+# Session ID management
+import uuid
+from datetime import datetime
+
+class Session:
+    def __init__(self):
+        self.session_id = str(uuid.uuid4())
+        self.timestamp = datetime.utcnow()
+
+    def __repr__(self):
+        return f"Session(session_id={self.session_id}, timestamp={self.timestamp})"
+
+# Example of session creation
+session = Session()
+print(session)
+
+# Persistent PDF storage in stored_pdfs directory
 import os
-from huggingface_hub import InferenceApi
-import json
 
+STORED_PDFS_DIR = 'stored_pdfs'
 
+if not os.path.exists(STORED_PDFS_DIR):
+    os.makedirs(STORED_PDFS_DIR)
 
-app = FastAPI()
+# Function to save PDF
+def save_pdf(file_name, content):
+    path = os.path.join(STORED_PDFS_DIR, file_name)
+    with open(path, 'wb') as f:
+        f.write(content)
 
-
-qa_holder: dict[str, Any] = {"qa": None}
-
-# allow front-end requests (use FastAPI's add_middleware API)
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-app.mount("/static", StaticFiles(directory="static", html=True), name="static")
-@app.get("/")
-def root():
-    return FileResponse("static/index.html")
-
-@app.post("/upload_pdf")
-async def upload_pdf(file: UploadFile = File(...)):
-    try:
-        print("📤 Starting file upload...")
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
-            content = await file.read()
-            print(f"📄 Read {len(content)} bytes from uploaded file")
-            tmp.write(content)
-            tmp_path = tmp.name
-            print("� Saved to temporary file:", tmp_path)
-
-        print("🔄 Creating QA chain...")
-        qa_holder["qa"] = build_qa(tmp_path)
-        print("✅ QA chain created successfully")
-        
-        # Clean up the temporary file
-        try:
-            os.unlink(tmp_path)
-            print("🗑️ Cleaned up temporary file")
-        except Exception as cleanup_error:
-            print("⚠️ Failed to clean up temporary file:", cleanup_error)
-            
-        return JSONResponse({"message": "✅ PDF uploaded and processed!"})
-    except Exception as e:
-        print("❌ ERROR during upload_pdf:")
-        print("Error type:", type(e).__name__)
-        print("Error message:", str(e))
-        traceback.print_exc()
-        return JSONResponse(
-            status_code=500,
-            content={
-                "error": f"Failed to process PDF: {str(e)}",
-                "error_type": type(e).__name__
-            }
-        )
-
-
-
-
-@app.post("/ask")
-async def ask(request: str = Form(...)):
-    try:
-        if qa_holder["qa"] is None:
-            return JSONResponse({"reply": "⚠️ Please upload a PDF first."})
-        print("🔹 Asking question:", request)
-        result = qa_holder["qa"].invoke(request)
-        print("✅ Invoke result:", result)
-        return JSONResponse({"reply": result if isinstance(result, str) else result.get("result", str(result))})
-    except Exception as e:
-        print("❌ ERROR during ask:", e)
-        traceback.print_exc()
-        return JSONResponse({"error": str(e)})
-
-@app.get("/health")
-def health():
-    return {"status": "ok"}
-
-
-@app.get("/hf_test")
-def hf_test():
-    """Quick test endpoint to verify Hugging Face Inference API token and model.
-    Returns generated text or an error message. Do NOT send secrets here.
-    """
-    hf_token = os.environ.get("HUGGINGFACEHUB_API_TOKEN")
-    hf_model = os.environ.get("HF_MODEL", "google/flan-t5-small")
-    if not hf_token:
-        return JSONResponse(status_code=400, content={"error": "HUGGINGFACEHUB_API_TOKEN not set in environment"})
-
-    try:
-        client = InferenceApi(repo_id=hf_model, token=hf_token)
-        prompt = "Translate to English: Bonjour le monde"
-        # call model
-        res = client(prompt, parameters={"max_new_tokens": 32})
-        # normalize response
-        if isinstance(res, list) and res:
-            first = res[0]
-            if isinstance(first, dict):
-                text = first.get("generated_text") or first.get("text") or json.dumps(first)
-            else:
-                text = str(first)
-        elif isinstance(res, dict):
-            text = res.get("generated_text") or res.get("text") or json.dumps(res)
-        else:
-            text = str(res)
-
-        return JSONResponse({"model": hf_model, "result": text})
-    except Exception as e:
-        return JSONResponse(status_code=500, content={"error": str(e)})
+# Example usage
+# save_pdf('sample.pdf', b'PDF binary content here')
