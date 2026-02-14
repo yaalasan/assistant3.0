@@ -1,31 +1,14 @@
-const API_URL = window.location.origin;
+// session_id tracking
+var currentSessionId = generateSessionId();
 
-async function uploadPDF() {
-  const file = document.getElementById("fileInput").files[0];
-  if (!file) return alert("Please select a PDF.");
-
-  const formData = new FormData();
-  formData.append("file", file);
-  const res = await fetch(`${API_URL}/upload_pdf`, {
-    method: "POST",
-    body: formData
-  });
-
-  const data = await res.json();
-  document.getElementById("status").innerText = data.message;
+// Function to generate a unique session ID
+function generateSessionId() {
+    return 'session-' + new Date().getTime();
 }
 
-async function askQuestion() {
-  const question = document.getElementById("questionInput").value;
-
-  const formData = new FormData();
-  formData.append("request", question);
-
-  const res = await fetch(`${API_URL}/ask`, {
-    method: "POST",
-    body: formData
-  });
-
-  const data = await res.json();
-  document.getElementById("answer").innerText = data.reply;
+// Example function to send ask requests with session_id
+function sendAskRequest(data) {
+    // Include the session_id when sending requests
+    data.session_id = currentSessionId;
+    // Send the data...
 }
